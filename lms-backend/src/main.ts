@@ -32,7 +32,7 @@ async function bootstrap() {
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
     .addServer('http://localhost:5000', 'Development server')
     .addServer(
-      'https://revoedu-backend-production-a7ac.up.railway.app',
+      'https://revoedu-backend-production-ee0d.up.railway.app',
       'Production server',
     )
     .addBearerAuth(
