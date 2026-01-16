@@ -32,7 +32,7 @@ async function bootstrap() {
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
     .addServer('http://localhost:3000', 'Development server')
     .addServer(
-      'https://revoedu-backend-production-6027.up.railway.app',
+      'https://revoedu-backend-production-a7ac.up.railway.app',
       'Production server',
     ) //belum
     .addBearerAuth(
@@ -48,7 +48,6 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
-
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
