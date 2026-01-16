@@ -24,9 +24,11 @@ export class CoursesService {
           select: {
             id: true,
             name: true,
-            email: true,
           },
         },
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
   }
@@ -40,6 +42,14 @@ export class CoursesService {
             id: true,
             name: true,
             email: true,
+            phone: true,
+            role: true,
+          },
+        },
+        _count: {
+          select: {
+            enrollments: true,
+            assignments: true,
           },
         },
       },

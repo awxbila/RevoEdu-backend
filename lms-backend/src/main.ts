@@ -31,7 +31,10 @@ async function bootstrap() {
     .setVersion('1.0')
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
     .addServer('http://localhost:3000', 'Development server')
-    .addServer('https://lms.example.com', 'Production server') //belum
+    .addServer(
+      'https://revoedu-backend-production-6027.up.railway.app',
+      'Production server',
+    ) //belum
     .addBearerAuth(
       {
         type: 'http',

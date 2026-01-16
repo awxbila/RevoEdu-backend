@@ -85,4 +85,32 @@ export class AssignmentsController {
   ) {
     return this.assignmentsService.submit(assignmentId, dto, req.user.id);
   }
+
+  // 📋 Get student's assignments with completion status
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT')
+  @Get('/my-assignments/course/:courseId')
+  getMyAssignments(@Param('courseId') courseId: string, @Request() req: any) {
+    return this.assignmentsService.getStudentAssignments(
+      Number(courseId),
+      req.user.id,
+    );
+  }
+
+  /**
+   * ===============================
+   * LECTURER - VIEW SUBMISSIONS
+   * ===============================
+   */
+
+  // 📊 Get all submissions for an assignment (Lecturer only)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('LECTURER')
+  @Get(':id/submissions')
+  getSubmissions(@Param('id') assignmentId: string, @Request() req: any) {
+    return this.assignmentsService.getAssignmentSubmissions(
+      assignmentId,
+      req.user.id,
+    );
+  }
 }

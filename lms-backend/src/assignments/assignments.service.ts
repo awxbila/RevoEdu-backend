@@ -87,4 +87,97 @@ export class AssignmentsService {
       },
     });
   }
+
+  async getStudentAssignments(courseId: number, studentId: number) {
+    // Verify student is enrolled in the course
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: {
+        studentId_courseId: {
+          studentId,
+          courseId,
+        },
+      },
+    });
+
+    if (!enrollment) {
+      throw new ForbiddenException('You are not enrolled in this course');
+    }
+
+    // Get all assignments for the course
+    const assignments = await this.prisma.assignment.findMany({
+      where: { courseId },
+      include: {
+        course: {
+          select: { id: true, title: true },
+        },
+        submissions: {
+          where: { studentId },
+          select: {
+            id: true,
+            content: true,
+            submittedAt: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Transform to include submission status
+    return assignments.map((assignment) => ({
+      id: assignment.id,
+      title: assignment.title,
+      description: assignment.description,
+      courseId: assignment.courseId,
+      course: assignment.course,
+      createdAt: assignment.createdAt,
+      updatedAt: assignment.updatedAt,
+      isSubmitted: assignment.submissions.length > 0,
+      submission: assignment.submissions[0] || null,
+    }));
+  }
+
+  async getAssignmentSubmissions(assignmentId: string, lecturerId: number) {
+    // Verify lecturer owns the assignment's course
+    const assignment = await this.prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      include: { course: true },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+
+    if (assignment.course.lecturerId !== lecturerId) {
+      throw new ForbiddenException('Not your assignment');
+    }
+
+    // Get all submissions with student info
+    const submissions = await this.prisma.submission.findMany({
+      where: { assignmentId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        submittedAt: 'desc',
+      },
+    });
+
+    return {
+      assignment: {
+        id: assignment.id,
+        title: assignment.title,
+        description: assignment.description,
+      },
+      totalSubmissions: submissions.length,
+      submissions,
+    };
+  }
 }
