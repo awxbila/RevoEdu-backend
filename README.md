@@ -155,6 +155,8 @@ Once the server is running, visit:
 
 **Swagger UI**: [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
 
+-
+
 ### Authentication
 
 1. Login to get JWT token:
@@ -221,6 +223,13 @@ npm run test:e2e
 ```bash
 npm run test:cov
 ```
+
+## 🚀 Deployment
+
+The application is deployed on Railway:
+
+- **API URL**: https://revoedu-backend-production.up.railway.app
+- **Swagger Docs**: https://revoedu-backend-production.up.railway.app/api-docs
 
 ## 📁 Project Structure
 
