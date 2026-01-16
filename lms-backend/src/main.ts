@@ -30,11 +30,11 @@ async function bootstrap() {
     .setDescription('API Documentation for Learning Management System')
     .setVersion('1.0')
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
-    .addServer('http://localhost:3000', 'Development server')
+    .addServer('http://localhost:5000', 'Development server')
     .addServer(
       'https://revoedu-backend-production-a7ac.up.railway.app',
       'Production server',
-    ) //belum
+    )
     .addBearerAuth(
       {
         type: 'http',
