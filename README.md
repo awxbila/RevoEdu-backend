@@ -228,8 +228,8 @@ npm run test:cov
 
 The application is deployed on Railway:
 
-- **API URL**: https://revoedu-backend-production.up.railway.app
-- **Swagger Docs**: https://revoedu-backend-production.up.railway.app/api-docs
+- **API URL**: https://revoedu-backend-production-6027.up.railway.app
+- **Swagger Docs**: https://revoedu-backend-production-6027.up.railway.app/api/docs
 
 ## 📁 Project Structure
 
