@@ -29,6 +29,9 @@ async function bootstrap() {
     .setTitle('LMS Backend API')
     .setDescription('API Documentation for Learning Management System')
     .setVersion('1.0')
+    .setLicense('MIT', 'https://opensource.org/licenses/MIT')
+    .addServer('http://localhost:3000', 'Development server')
+    .addServer('https://lms.example.com', 'Production server') //belum
     .addBearerAuth(
       {
         type: 'http',
