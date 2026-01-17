@@ -27,11 +27,27 @@ export class AssignmentsController {
    * ===============================
    */
 
+  // 🔍 Get all assignments (Student & Lecturer)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT', 'LECTURER')
+  @Get()
+  findAll(@Request() req: any) {
+    return this.assignmentsService.findAll(req.user);
+  }
+
   // 📚 Get assignments by course (Student & Lecturer)
   @UseGuards(JwtAuthGuard)
   @Get('/course/:courseId')
   findByCourse(@Param('courseId') courseId: string) {
     return this.assignmentsService.findByCourse(Number(courseId));
+  }
+
+  // 🔍 Get assignment detail (Student & Lecturer)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT', 'LECTURER')
+  @Get(':id')
+  findOne(@Param('id') assignmentId: string, @Request() req: any) {
+    return this.assignmentsService.findOne(assignmentId, req.user);
   }
 
   /**

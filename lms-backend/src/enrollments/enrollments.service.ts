@@ -67,6 +67,37 @@ export class EnrollmentsService {
     });
   }
 
+  async unenrollCourse(studentId: number, courseId: number) {
+    // 1️⃣ Check enrollment exists
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: {
+        studentId_courseId: {
+          studentId,
+          courseId,
+        },
+      },
+    });
+
+    if (!enrollment) {
+      throw new NotFoundException('Enrollment not found');
+    }
+
+    // 2️⃣ Delete enrollment
+    await this.prisma.enrollment.delete({
+      where: {
+        studentId_courseId: {
+          studentId,
+          courseId,
+        },
+      },
+    });
+
+    return {
+      message: 'Successfully unenrolled from course',
+      courseId,
+    };
+  }
+
   /**
    * ===============================
    * LECTURER

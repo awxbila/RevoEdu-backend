@@ -68,11 +68,23 @@ export class CoursesService {
    * ===============================
    */
 
-  async create(dto: CreateCourseDto, lecturerId: number) {
+  async create(
+    dto: CreateCourseDto,
+    lecturerId: number,
+    file?: Express.Multer.File,
+  ) {
+    let imageUrl: string | null = null;
+
+    if (file) {
+      // Generate URL for uploaded image
+      imageUrl = `/uploads/courses/${file.filename}`;
+    }
+
     return this.prisma.course.create({
       data: {
         title: dto.title,
         description: dto.description,
+        imageUrl,
         lecturerId,
       },
     });

@@ -8,8 +8,12 @@ import {
   Body,
   UseGuards,
   Request,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerConfig } from '../config/multer.config';
 
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -55,8 +59,14 @@ export class CoursesController {
   // ➕ Create course
   @Roles('LECTURER')
   @Post()
-  create(@Body() dto: CreateCourseDto, @Request() req: any) {
-    return this.coursesService.create(dto, req.user.id);
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('image', multerConfig))
+  create(
+    @Body() dto: CreateCourseDto,
+    @Request() req: any,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.coursesService.create(dto, req.user.id, file);
   }
 
   // ✏️ Update course

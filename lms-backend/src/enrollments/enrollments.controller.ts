@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
   UseGuards,
   Request,
@@ -46,6 +47,17 @@ export class EnrollmentsController {
   @Roles('STUDENT')
   getMyEnrollments(@Request() req: any) {
     return this.enrollmentsService.getStudentEnrollments(req.user.id);
+  }
+
+  // ❌ Unenroll from course
+  @Delete('course/:courseId')
+  @Roles('STUDENT')
+  @ApiOperation({ summary: 'Unenroll from a course' })
+  unenrollCourse(@Param('courseId') courseId: string, @Request() req: any) {
+    return this.enrollmentsService.unenrollCourse(
+      req.user.id,
+      Number(courseId),
+    );
   }
 
   /**

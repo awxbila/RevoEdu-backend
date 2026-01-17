@@ -19,10 +19,11 @@ Learning Management System (LMS) Backend built with **NestJS**, **Prisma**, and 
 
 - 🔐 **Authentication & Authorization**: JWT-based auth with role-based access control
 - 👥 **User Management**: Support for STUDENT and LECTURER roles
-- 📚 **Course Management**: Create, read, update, delete courses
+- 📚 **Course Management**: Create, read, update, delete courses with image upload
 - 📝 **Assignments**: Create and manage assignments for courses
 - ✅ **Submissions**: Students can submit assignments
-- 📊 **Enrollments**: Students can enroll to courses
+- 📊 **Enrollments**: Students can enroll/unenroll from courses
+- 🖼️ **File Upload**: Course image upload with static file serving
 - 🚀 **Swagger Documentation**: Interactive API docs
 - ✔️ **E2E Testing**: Comprehensive test suite
 
@@ -188,7 +189,7 @@ Bearer <your_access_token>
 
 - `GET /api/courses` - Get all courses (STUDENT, LECTURER)
 - `GET /api/courses/:id` - Get course details
-- `POST /api/courses` - Create course (LECTURER only)
+- `POST /api/courses` - Create course with image upload (LECTURER only)
 - `PATCH /api/courses/:id` - Update course (LECTURER only)
 - `DELETE /api/courses/:id` - Delete course (LECTURER only)
 
@@ -196,7 +197,66 @@ Bearer <your_access_token>
 
 - `POST /api/enrollments` - Enroll to course (STUDENT only)
 - `GET /api/enrollments/me` - Get my enrollments (STUDENT)
+- `DELETE /api/enrollments/course/:courseId` - Unenroll from course (STUDENT)
 - `GET /api/enrollments/course/:courseId` - Get students in course (LECTURER)
+
+**Assignments**
+
+- `GET /api/assignments` - Get all assignments (filtered by role)
+- `GET /api/assignments/:id` - Get assignment detail with submissions
+- `GET /api/assignments/course/:courseId` - Get assignments by course
+- `POST /api/assignments` - Create assignment (LECTURER only)
+- `PATCH /api/assignments/:id` - Update assignment (LECTURER only)
+- `DELETE /api/assignments/:id` - Delete assignment (LECTURER only)
+- `POST /api/assignments/:id/submit` - Submit assignment (STUDENT only)
+- `GET /api/assignments/:id/submissions` - View all submissions (LECTURER)
+- `GET /api/assignments/my-assignments/course/:courseId` - Get student's assignments with status (STUDENT)
+
+### Example: Creating a Course with Image
+
+```bash
+POST /api/courses
+Content-Type: multipart/form-data
+
+FormData:
+  title: "Backend Development"
+  description: "Learn NestJS from scratch"
+  image: [file]
+```
+
+Response:
+
+```json
+{
+  "id": 1,
+  "title": "Backend Development",
+  "description": "Learn NestJS from scratch",
+  "imageUrl": "/uploads/courses/course-1705459234567-123456789.jpg",
+  "lecturerId": 1,
+  "createdAt": "2026-01-17T00:47:46.000Z",
+  "updatedAt": "2026-01-17T00:47:46.000Z"
+}
+```
+
+Image URL: `http://localhost:3000/uploads/courses/course-1705459234567-123456789.jpg`
+
+### Example: Student Unenrolling from Course
+
+```bash
+DELETE /api/enrollments/course/1
+Authorization: Bearer <student_token>
+```
+
+Response:
+
+```json
+{
+  "message": "Successfully unenrolled from course",
+  "courseId": 1
+}
+```
+
+Note: After unenrolling, student can re-enroll to the same course anytime.
 
 ## ✅ Testing
 
@@ -259,8 +319,10 @@ lms-backend/
 │   │   ├── assignments.controller.ts
 │   │   ├── assignments.service.ts
 │   │   └── assignments.module.ts
-│   ├── prisma/                  # Prisma service & module
 │   ├── users/                   # Users module
+│   ├── prisma/                  # Prisma service & module
+│   ├── config/                  # Configuration files
+│   │   └── multer.config.ts    # File upload config
 │   ├── app.module.ts
 │   ├── app.service.ts
 │   ├── app.controller.ts
@@ -269,6 +331,8 @@ lms-backend/
 │   ├── schema.prisma            # Database schema
 │   ├── seed.ts                  # Seed script
 │   └── migrations/              # Database migrations
+├── uploads/                     # Uploaded files directory
+│   └── courses/                # Course images
 ├── test/
 │   ├── app.e2e-spec.ts
 │   └── jest-e2e.json
@@ -286,6 +350,7 @@ lms-backend/
 - **JWT Tokens**: Stateless authentication
 - **Role-Based Access Control (RBAC)**: Different permissions for STUDENT and LECTURER
 - **Input Validation**: Class-validator for request validation
+- **File Upload Security**: File type and size validation (max 5MB, images only)
 - **CORS Enabled**: Configured for development
 - **Global Error Handling**: Centralized exception handling
 

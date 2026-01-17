@@ -11,6 +11,158 @@ import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 export class AssignmentsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findAll(user: { id: number; role: string }) {
+    if (user.role === 'LECTURER') {
+      return this.prisma.assignment.findMany({
+        where: {
+          course: {
+            lecturerId: user.id,
+          },
+        },
+        include: {
+          course: {
+            select: { id: true, title: true },
+          },
+          _count: {
+            select: { submissions: true },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+    }
+
+    const assignments = await this.prisma.assignment.findMany({
+      where: {
+        course: {
+          enrollments: {
+            some: {
+              studentId: user.id,
+            },
+          },
+        },
+      },
+      include: {
+        course: {
+          select: { id: true, title: true },
+        },
+        submissions: {
+          where: { studentId: user.id },
+          select: {
+            id: true,
+            content: true,
+            submittedAt: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return assignments.map((assignment) => ({
+      id: assignment.id,
+      title: assignment.title,
+      description: assignment.description,
+      courseId: assignment.courseId,
+      course: assignment.course,
+      createdAt: assignment.createdAt,
+      updatedAt: assignment.updatedAt,
+      isSubmitted: assignment.submissions.length > 0,
+      submission: assignment.submissions[0] || null,
+    }));
+  }
+
+  async findOne(assignmentId: string, user: { id: number; role: string }) {
+    const assignment = await this.prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      include: {
+        course: {
+          select: { id: true, title: true, lecturerId: true },
+        },
+      },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+
+    if (user.role === 'LECTURER' && assignment.course.lecturerId !== user.id) {
+      throw new ForbiddenException('Not your assignment');
+    }
+
+    if (user.role === 'STUDENT') {
+      const enrollment = await this.prisma.enrollment.findUnique({
+        where: {
+          studentId_courseId: {
+            studentId: user.id,
+            courseId: assignment.courseId,
+          },
+        },
+      });
+
+      if (!enrollment) {
+        throw new ForbiddenException('You are not enrolled in this course');
+      }
+
+      const submission = await this.prisma.submission.findUnique({
+        where: {
+          assignmentId_studentId: {
+            assignmentId,
+            studentId: user.id,
+          },
+        },
+      });
+
+      return {
+        id: assignment.id,
+        title: assignment.title,
+        description: assignment.description,
+        courseId: assignment.courseId,
+        course: {
+          id: assignment.course.id,
+          title: assignment.course.title,
+        },
+        createdAt: assignment.createdAt,
+        updatedAt: assignment.updatedAt,
+        isSubmitted: Boolean(submission),
+        submission,
+      };
+    }
+
+    const submissions = await this.prisma.submission.findMany({
+      where: { assignmentId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        submittedAt: 'desc',
+      },
+    });
+
+    return {
+      id: assignment.id,
+      title: assignment.title,
+      description: assignment.description,
+      courseId: assignment.courseId,
+      course: {
+        id: assignment.course.id,
+        title: assignment.course.title,
+      },
+      createdAt: assignment.createdAt,
+      updatedAt: assignment.updatedAt,
+      totalSubmissions: submissions.length,
+      submissions,
+    };
+  }
+
   async findByCourse(courseId: number) {
     return this.prisma.assignment.findMany({
       where: { courseId },
@@ -56,7 +208,12 @@ export class AssignmentsService {
 
     return this.prisma.assignment.update({
       where: { id: assignmentId },
-      data: dto,
+      data: {
+        ...(dto.title !== undefined ? { title: dto.title } : {}),
+        ...(dto.description !== undefined
+          ? { description: dto.description }
+          : {}),
+      },
     });
   }
 

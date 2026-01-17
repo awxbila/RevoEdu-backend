@@ -32,6 +32,7 @@ model Course {
   id          Int     @id @default(autoincrement())
   title       String
   description String?
+  imageUrl    String?
 
   lecturerId Int
   lecturer   User @relation("LecturerCourses", fields: [lecturerId], references: [id])
