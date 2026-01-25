@@ -337,4 +337,146 @@ export class AssignmentsService {
       submissions,
     };
   }
+
+  async gradeSubmission(
+    submissionId: string,
+    dto: { grade: number; feedback?: string },
+    lecturerId: number,
+  ) {
+    // Get submission with assignment info
+    const submission = await this.prisma.submission.findUnique({
+      where: { id: submissionId },
+      include: {
+        assignment: {
+          include: { course: true },
+        },
+      },
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Submission not found');
+    }
+
+    // Verify lecturer owns the course
+    if (submission.assignment.course.lecturerId !== lecturerId) {
+      throw new ForbiddenException('Not your assignment');
+    }
+
+    // Update submission with grade
+    return this.prisma.submission.update({
+      where: { id: submissionId },
+      data: {
+        grade: dto.grade,
+        feedback: dto.feedback,
+        status: 'GRADED',
+        gradedAt: new Date(),
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        assignment: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getSubmissionDetail(
+    submissionId: string,
+    userId: number,
+    userRole: string,
+  ) {
+    const submission = await this.prisma.submission.findUnique({
+      where: { id: submissionId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        assignment: {
+          include: { course: true },
+        },
+      },
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Submission not found');
+    }
+
+    // Student can only view their own submission
+    if (userRole === 'STUDENT' && submission.studentId !== userId) {
+      throw new ForbiddenException('Not your submission');
+    }
+
+    // Lecturer can only view submissions for their assignments
+    if (
+      userRole === 'LECTURER' &&
+      submission.assignment.course.lecturerId !== userId
+    ) {
+      throw new ForbiddenException('Not your assignment');
+    }
+
+    return submission;
+  }
+
+  async rejectSubmission(
+    submissionId: string,
+    dto: { feedback: string },
+    lecturerId: number,
+  ) {
+    // Get submission with assignment info
+    const submission = await this.prisma.submission.findUnique({
+      where: { id: submissionId },
+      include: {
+        assignment: {
+          include: { course: true },
+        },
+      },
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Submission not found');
+    }
+
+    // Verify lecturer owns the course
+    if (submission.assignment.course.lecturerId !== lecturerId) {
+      throw new ForbiddenException('Not your assignment');
+    }
+
+    // Update submission status to rejected
+    return this.prisma.submission.update({
+      where: { id: submissionId },
+      data: {
+        status: 'REJECTED',
+        feedback: dto.feedback,
+        gradedAt: new Date(),
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        assignment: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+  }
 }

@@ -16,6 +16,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { SubmitAssignmentDto } from './dto/submit-assignment.dto';
+import { GradeSubmissionDto } from './dto/grade-submission.dto';
 
 @Controller('assignments')
 export class AssignmentsController {
@@ -126,6 +127,52 @@ export class AssignmentsController {
   getSubmissions(@Param('id') assignmentId: string, @Request() req: any) {
     return this.assignmentsService.getAssignmentSubmissions(
       assignmentId,
+      req.user.id,
+    );
+  }
+
+  // 📄 Get submission detail (Student & Lecturer)
+  @UseGuards(JwtAuthGuard)
+  @Get('submission/:submissionId')
+  getSubmissionDetail(
+    @Param('submissionId') submissionId: string,
+    @Request() req: any,
+  ) {
+    return this.assignmentsService.getSubmissionDetail(
+      submissionId,
+      req.user.id,
+      req.user.role,
+    );
+  }
+
+  // ⭐ Grade a submission (Lecturer only)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('LECTURER')
+  @Patch('submission/:submissionId/grade')
+  gradeSubmission(
+    @Param('submissionId') submissionId: string,
+    @Body() dto: GradeSubmissionDto,
+    @Request() req: any,
+  ) {
+    return this.assignmentsService.gradeSubmission(
+      submissionId,
+      dto,
+      req.user.id,
+    );
+  }
+
+  // ❌ Reject a submission (Lecturer only)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('LECTURER')
+  @Patch('submission/:submissionId/reject')
+  rejectSubmission(
+    @Param('submissionId') submissionId: string,
+    @Body() dto: { feedback: string },
+    @Request() req: any,
+  ) {
+    return this.assignmentsService.rejectSubmission(
+      submissionId,
+      dto,
       req.user.id,
     );
   }

@@ -20,9 +20,10 @@ model User {
   role     Role
   phone    String?
 
-  courses     Course[]     @relation("LecturerCourses")
-  enrollments Enrollment[]
-  submissions Submission[]
+  courses          Course[]          @relation("LecturerCourses")
+  enrollments      Enrollment[]
+  submissions      Submission[]
+  quizSubmissions  QuizSubmission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -39,6 +40,7 @@ model Course {
 
   enrollments Enrollment[]
   assignments Assignment[]
+  quizzes     Quiz[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -73,6 +75,12 @@ model Assignment {
   updatedAt DateTime @updatedAt
 }
 
+enum SubmissionStatus {
+  SUBMITTED
+  GRADED
+  REJECTED
+}
+
 model Submission {
   id String @id @default(uuid())
 
@@ -83,7 +91,87 @@ model Submission {
   student    User       @relation(fields: [studentId], references: [id])
 
   content     String
+  status      SubmissionStatus @default(SUBMITTED)
+  grade       Float?
+  feedback    String?
   submittedAt DateTime @default(now())
+  gradedAt    DateTime?
 
   @@unique([assignmentId, studentId])
+}
+
+model Quiz {
+  id          String @id @default(cuid())
+  title       String
+  description String?
+  duration    Int?    // Durasi dalam menit (optional)
+
+  courseId Int
+  course   Course @relation(fields: [courseId], references: [id])
+
+  questions   Question[]
+  submissions QuizSubmission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courseId])
+}
+
+model Question {
+  id       String @id @default(cuid())
+  question String
+  optionA  String
+  optionB  String
+  optionC  String
+  optionD  String
+  correctAnswer String // 'A', 'B', 'C', atau 'D'
+  order    Int    // Urutan pertanyaan
+
+  quizId String
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  answers QuizAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([quizId])
+}
+
+model QuizSubmission {
+  id String @id @default(cuid())
+
+  quizId    String
+  studentId Int
+
+  quiz    Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  student User @relation(fields: [studentId], references: [id])
+
+  answers        QuizAnswer[]
+  score          Float        // Nilai akhir (0-100)
+  correctCount   Int          // Jumlah jawaban benar
+  totalQuestions Int          // Total pertanyaan
+  submittedAt    DateTime     @default(now())
+
+  @@unique([quizId, studentId])
+  @@index([quizId])
+  @@index([studentId])
+}
+
+model QuizAnswer {
+  id String @id @default(cuid())
+
+  submissionId String
+  questionId   String
+
+  submission QuizSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question   Question       @relation(fields: [questionId], references: [id])
+
+  selectedAnswer String // 'A', 'B', 'C', atau 'D'
+  isCorrect      Boolean
+
+  @@unique([submissionId, questionId])
+  @@index([submissionId])
+  @@index([questionId])
 }
