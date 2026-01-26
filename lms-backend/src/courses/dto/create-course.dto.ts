@@ -12,6 +12,11 @@ export class CreateCourseDto {
   @IsNotEmpty()
   description: string;
 
+  @ApiPropertyOptional({ example: 'WEB-101' })
+  @IsString()
+  @IsOptional()
+  code?: string;
+
   @ApiPropertyOptional({ type: 'string', format: 'binary' })
   @IsOptional()
   image?: any;

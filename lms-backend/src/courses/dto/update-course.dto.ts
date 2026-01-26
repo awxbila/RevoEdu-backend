@@ -11,4 +11,9 @@ export class UpdateCourseDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @ApiProperty({ example: 'WEB-101', required: false })
+  @IsString()
+  @IsOptional()
+  code?: string;
 }

@@ -18,10 +18,12 @@ import { multerConfig } from '../config/multer.config';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { CreateCourseModuleDto } from './dto/create-course-module.dto';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { moduleMulterConfig } from '../config/multer.modules.config';
 
 @ApiTags('Courses')
 @ApiBearerAuth('JWT')
@@ -78,6 +80,27 @@ export class CoursesController {
     @Request() req: any,
   ) {
     return this.coursesService.update(Number(id), dto, req.user.id);
+  }
+
+  // 📚 Add course module (ppt/pdf/video)
+  @Roles('LECTURER')
+  @Post(':id/modules')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file', moduleMulterConfig))
+  addModule(
+    @Param('id') id: string,
+    @Body() dto: CreateCourseModuleDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req: any,
+  ) {
+    return this.coursesService.addModule(Number(id), dto, req.user.id, file);
+  }
+
+  // 📂 List course modules (enrolled students & lecturer)
+  @Roles('STUDENT', 'LECTURER')
+  @Get(':id/modules')
+  getModules(@Param('id') id: string, @Request() req: any) {
+    return this.coursesService.getModules(Number(id), req.user);
   }
 
   // ❌ Delete course

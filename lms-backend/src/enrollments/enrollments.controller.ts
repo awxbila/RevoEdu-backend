@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Delete,
+  Patch,
   Body,
   UseGuards,
   Request,
@@ -12,6 +13,7 @@ import { ApiTags, ApiBearerAuth, ApiBody, ApiOperation } from '@nestjs/swagger';
 
 import { EnrollmentsService } from './enrollments.service';
 import { EnrollCourseDto } from './dto/enroll-course.dto';
+import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -47,6 +49,21 @@ export class EnrollmentsController {
   @Roles('STUDENT')
   getMyEnrollments(@Request() req: any) {
     return this.enrollmentsService.getStudentEnrollments(req.user.id);
+  }
+
+  // ✏️ Update my enrollment (semester/status)
+  @Patch(':id')
+  @Roles('STUDENT')
+  updateEnrollment(
+    @Param('id') id: string,
+    @Body() dto: UpdateEnrollmentDto,
+    @Request() req: any,
+  ) {
+    return this.enrollmentsService.updateEnrollment(
+      Number(id),
+      req.user.id,
+      dto,
+    );
   }
 
   // ❌ Unenroll from course

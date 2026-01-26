@@ -8,7 +8,11 @@ import {
   Body,
   UseGuards,
   Request,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AssignmentsService } from './assignments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -17,6 +21,7 @@ import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { SubmitAssignmentDto } from './dto/submit-assignment.dto';
 import { GradeSubmissionDto } from './dto/grade-submission.dto';
+import { submissionMulterConfig } from '../config/multer.submission.config';
 
 @Controller('assignments')
 export class AssignmentsController {
@@ -95,12 +100,16 @@ export class AssignmentsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('STUDENT')
   @Post(':id/submit')
+  @UseInterceptors(FileInterceptor('file', submissionMulterConfig))
   submit(
     @Param('id') assignmentId: string,
-    @Body() dto: SubmitAssignmentDto,
+    @UploadedFile() file: Express.Multer.File,
     @Request() req: any,
   ) {
-    return this.assignmentsService.submit(assignmentId, dto, req.user.id);
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+    return this.assignmentsService.submit(assignmentId, file, req.user.id);
   }
 
   // 📋 Get student's assignments with completion status

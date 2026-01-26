@@ -141,6 +141,40 @@ export class QuizzesService {
     }));
   }
 
+  // List quizzes for a student across enrolled courses
+  async findAllForStudent(studentId: number) {
+    // Get enrolled course ids
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { studentId },
+      select: { courseId: true },
+    });
+
+    const courseIds = enrollments.map((e) => e.courseId);
+    if (courseIds.length === 0) return [];
+
+    const quizzes = await this.prisma.quiz.findMany({
+      where: { courseId: { in: courseIds } },
+      include: {
+        _count: { select: { questions: true } },
+        course: { select: { id: true, title: true } },
+        submissions: {
+          where: { studentId },
+          select: { id: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return quizzes.map((quiz) => ({
+      id: quiz.id,
+      title: quiz.title,
+      courseId: quiz.courseId,
+      courseName: quiz.course.title,
+      questionCount: quiz._count.questions,
+      isCompleted: quiz.submissions.length > 0,
+    }));
+  }
+
   async findOne(quizId: string, userId: number, userRole: string) {
     const quiz = await this.prisma.quiz.findUnique({
       where: { id: quizId },

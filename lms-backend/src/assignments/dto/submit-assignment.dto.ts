@@ -1,7 +1,2 @@
-import { IsString, IsNotEmpty } from 'class-validator';
-
-export class SubmitAssignmentDto {
-  @IsString()
-  @IsNotEmpty()
-  content: string;
-}
+// File is handled by Multer, no DTO validation needed
+export class SubmitAssignmentDto {}

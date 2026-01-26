@@ -98,6 +98,36 @@ export class EnrollmentsService {
     };
   }
 
+  async updateEnrollment(
+    enrollmentId: number,
+    studentId: number,
+    payload: { semester?: string; status?: string },
+  ) {
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: { id: enrollmentId },
+    });
+
+    if (!enrollment) {
+      throw new NotFoundException('Enrollment not found');
+    }
+
+    if (enrollment.studentId !== studentId) {
+      throw new ForbiddenException(
+        'You are not allowed to edit this enrollment',
+      );
+    }
+
+    return this.prisma.enrollment.update({
+      where: { id: enrollmentId },
+      data: {
+        ...(payload.semester !== undefined
+          ? { semester: payload.semester }
+          : {}),
+        ...(payload.status !== undefined ? { status: payload.status } : {}),
+      },
+    });
+  }
+
   /**
    * ===============================
    * LECTURER

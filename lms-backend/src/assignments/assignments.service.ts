@@ -51,7 +51,7 @@ export class AssignmentsService {
           where: { studentId: user.id },
           select: {
             id: true,
-            content: true,
+            fileUrl: true,
             submittedAt: true,
           },
         },
@@ -65,6 +65,9 @@ export class AssignmentsService {
       id: assignment.id,
       title: assignment.title,
       description: assignment.description,
+      code: assignment.code,
+      brief: assignment.brief,
+      dueDate: assignment.dueDate,
       courseId: assignment.courseId,
       course: assignment.course,
       createdAt: assignment.createdAt,
@@ -119,6 +122,9 @@ export class AssignmentsService {
         id: assignment.id,
         title: assignment.title,
         description: assignment.description,
+        code: assignment.code,
+        brief: assignment.brief,
+        dueDate: assignment.dueDate,
         courseId: assignment.courseId,
         course: {
           id: assignment.course.id,
@@ -151,6 +157,9 @@ export class AssignmentsService {
       id: assignment.id,
       title: assignment.title,
       description: assignment.description,
+      code: assignment.code,
+      brief: assignment.brief,
+      dueDate: assignment.dueDate,
       courseId: assignment.courseId,
       course: {
         id: assignment.course.id,
@@ -187,6 +196,9 @@ export class AssignmentsService {
       data: {
         title: dto.title,
         description: dto.description,
+        code: dto.code,
+        brief: dto.brief,
+        dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
         courseId: dto.courseId,
       },
     });
@@ -213,6 +225,11 @@ export class AssignmentsService {
         ...(dto.description !== undefined
           ? { description: dto.description }
           : {}),
+        ...(dto.code !== undefined ? { code: dto.code } : {}),
+        ...(dto.brief !== undefined ? { brief: dto.brief } : {}),
+        ...(dto.dueDate !== undefined
+          ? { dueDate: dto.dueDate ? new Date(dto.dueDate) : null }
+          : {}),
       },
     });
   }
@@ -233,14 +250,66 @@ export class AssignmentsService {
   }
   async submit(
     assignmentId: string,
-    dto: { content: string },
+    file: Express.Multer.File,
     studentId: number,
   ) {
+    // Verify assignment exists
+    const assignment = await this.prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      include: {
+        course: {
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+
+    // Verify student is enrolled in the course
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: {
+        studentId_courseId: {
+          studentId,
+          courseId: assignment.courseId,
+        },
+      },
+    });
+
+    if (!enrollment) {
+      throw new ForbiddenException('You are not enrolled in this course');
+    }
+
+    // Check if already submitted
+    const existingSubmission = await this.prisma.submission.findUnique({
+      where: {
+        assignmentId_studentId: {
+          assignmentId,
+          studentId,
+        },
+      },
+    });
+
+    if (existingSubmission) {
+      throw new ForbiddenException(
+        'You have already submitted this assignment',
+      );
+    }
+
+    // Generate file URL
+    const fileUrl = `/uploads/submissions/${file.filename}`;
+
     return this.prisma.submission.create({
       data: {
         assignmentId,
         studentId,
-        content: dto.content,
+        fileUrl,
+      },
+      include: {
+        assignment: {
+          select: { id: true, title: true },
+        },
       },
     });
   }
@@ -271,7 +340,7 @@ export class AssignmentsService {
           where: { studentId },
           select: {
             id: true,
-            content: true,
+            fileUrl: true,
             submittedAt: true,
           },
         },

@@ -12,4 +12,12 @@ export class UpdateAssignmentDto {
   @IsDateString()
   @IsOptional()
   dueDate?: string;
+
+  @IsString()
+  @IsOptional()
+  code?: string;
+
+  @IsString()
+  @IsOptional()
+  brief?: string;
 }

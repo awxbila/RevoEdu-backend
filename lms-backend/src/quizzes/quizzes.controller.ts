@@ -80,6 +80,14 @@ export class QuizzesController {
     );
   }
 
+  // 📚 Get all quizzes for the logged-in student (across enrollments)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT')
+  @Get('student')
+  findAllForStudent(@Request() req: any) {
+    return this.quizzesService.findAllForStudent(req.user.id);
+  }
+
   // 🔍 Get quiz detail
   @UseGuards(JwtAuthGuard)
   @Get(':id')
