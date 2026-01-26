@@ -23,8 +23,8 @@ async function main() {
   // Create example data matching Swagger documentation
   const hashedPassword = await bcrypt.hash('password123', 10);
 
-  // Create lecturer (Dr. Budi Santoso)
-  const lecturer = await prisma.user.create({
+  // Create lecturers (3 different lecturers)
+  const lecturer1 = await prisma.user.create({
     data: {
       name: 'Dr. Budi Santoso',
       email: 'budi@example.com',
@@ -33,7 +33,29 @@ async function main() {
       phone: '081234567890',
     },
   });
-  console.log('✅ Created lecturer:', lecturer.name);
+  console.log('✅ Created lecturer 1:', lecturer1.name);
+
+  const lecturer2 = await prisma.user.create({
+    data: {
+      name: 'Prof. Siti Nurhaliza',
+      email: 'siti@example.com',
+      password: hashedPassword,
+      role: 'LECTURER',
+      phone: '082345678901',
+    },
+  });
+  console.log('✅ Created lecturer 2:', lecturer2.name);
+
+  const lecturer3 = await prisma.user.create({
+    data: {
+      name: 'Dr. Ahmad Rahman',
+      email: 'ahmad@example.com',
+      password: hashedPassword,
+      role: 'LECTURER',
+      phone: '083456789012',
+    },
+  });
+  console.log('✅ Created lecturer 3:', lecturer3.name);
 
   // Create example student
   const student = await prisma.user.create({
@@ -46,16 +68,21 @@ async function main() {
   });
   console.log('✅ Created student:', student.name);
 
-  // Create example course (Web Development Basics)
+  // Create example course (Web Development Basics) - Lecturer 1
   const course = await prisma.course.create({
     data: {
       title: 'Web Development Basics',
       description: 'Dasar-dasar web development dengan HTML, CSS, JavaScript',
       code: 'WEB-101',
-      lecturerId: lecturer.id,
+      lecturerId: lecturer1.id,
     },
   });
-  console.log('✅ Created course:', course.title);
+  console.log(
+    '✅ Created course 1:',
+    course.title,
+    '- Lecturer:',
+    lecturer1.name,
+  );
 
   // Enroll student to course
   const enrollment = await prisma.enrollment.create({
@@ -124,7 +151,7 @@ async function main() {
   console.log('✅ Created 2 quiz questions');
 
   // ==========================================
-  // COURSE 2: Advanced JavaScript
+  // COURSE 2: Advanced JavaScript - Lecturer 2
   // ==========================================
   const course2 = await prisma.course.create({
     data: {
@@ -132,10 +159,15 @@ async function main() {
       description:
         'Pelajari async/await, promises, dan design patterns di JavaScript',
       code: 'JS-201',
-      lecturerId: lecturer.id,
+      lecturerId: lecturer2.id,
     },
   });
-  console.log('✅ Created course 2:', course2.title);
+  console.log(
+    '✅ Created course 2:',
+    course2.title,
+    '- Lecturer:',
+    lecturer2.name,
+  );
 
   await prisma.enrollment.create({
     data: {
@@ -201,7 +233,7 @@ async function main() {
   console.log('✅ Created 2 questions for quiz 2');
 
   // ==========================================
-  // COURSE 3: Database Design & SQL
+  // COURSE 3: Database Design & SQL - Lecturer 3
   // ==========================================
   const course3 = await prisma.course.create({
     data: {
@@ -209,10 +241,15 @@ async function main() {
       description:
         'Desain database relasional dan query SQL untuk aplikasi enterprise',
       code: 'DB-301',
-      lecturerId: lecturer.id,
+      lecturerId: lecturer3.id,
     },
   });
-  console.log('✅ Created course 3:', course3.title);
+  console.log(
+    '✅ Created course 3:',
+    course3.title,
+    '- Lecturer:',
+    lecturer3.name,
+  );
 
   await prisma.enrollment.create({
     data: {
@@ -279,27 +316,40 @@ async function main() {
   console.log('\n✅ All example data seeded successfully!');
   console.log('\n📋 Example Credentials:');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Lecturer (Dr. Budi Santoso):');
-  console.log('  Email:', lecturer.email);
-  console.log('  Password: password123');
-  console.log('  Phone:', lecturer.phone);
+  console.log('Lecturers (3):');
+  console.log('  1. Dr. Budi Santoso');
+  console.log('     Email:', lecturer1.email);
+  console.log('     Phone:', lecturer1.phone);
+  console.log('');
+  console.log('  2. Prof. Siti Nurhaliza');
+  console.log('     Email:', lecturer2.email);
+  console.log('     Phone:', lecturer2.phone);
+  console.log('');
+  console.log('  3. Dr. Ahmad Rahman');
+  console.log('     Email:', lecturer3.email);
+  console.log('     Phone:', lecturer3.phone);
   console.log('');
   console.log('Student:');
   console.log('  Email:', student.email);
   console.log('  Password: password123');
+  console.log('');
+  console.log('(All users password: password123)');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('\n📚 Example Courses (3):');
   console.log('');
   console.log('1️⃣  Web Development Basics (WEB-101)');
+  console.log('   👨‍🏫 Lecturer: Dr. Budi Santoso');
   console.log('   📝 Assignment: Membuat Halaman Login');
   console.log('   ❓ Quiz: Quiz HTML & CSS Basics');
   console.log('');
   console.log('2️⃣  Advanced JavaScript (JS-201)');
+  console.log('   👩‍🏫 Lecturer: Prof. Siti Nurhaliza');
   console.log('   📝 Assignment: Implementasi Promise & Async Await');
   console.log('   ❓ Quiz: Quiz Async JavaScript');
   console.log('');
   console.log('3️⃣  Database Design & SQL (DB-301)');
-  console.log('   📝 Assignment: Desain Database E-Commerce');
+  console.log('   �‍🏫 Lecturer: Dr. Ahmad Rahman');
+  console.log('   �📝 Assignment: Desain Database E-Commerce');
   console.log('   ❓ Quiz: Quiz SQL Fundamentals');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
