@@ -104,7 +104,7 @@ async function main() {
       code: 'ASG-LOGIN',
       brief:
         'Buat halaman login dengan email dan password. Gunakan form validation.',
-      dueDate: new Date('2026-02-15'),
+      dueDate: new Date('2025-12-01'), // overdue
       courseId: course.id,
     },
   });
