@@ -123,7 +123,160 @@ async function main() {
 
   console.log('✅ Created 2 quiz questions');
 
-  console.log('\n✅ Example data seeded successfully!');
+  // ==========================================
+  // COURSE 2: Advanced JavaScript
+  // ==========================================
+  const course2 = await prisma.course.create({
+    data: {
+      title: 'Advanced JavaScript',
+      description:
+        'Pelajari async/await, promises, dan design patterns di JavaScript',
+      code: 'JS-201',
+      lecturerId: lecturer.id,
+    },
+  });
+  console.log('✅ Created course 2:', course2.title);
+
+  await prisma.enrollment.create({
+    data: {
+      studentId: student.id,
+      courseId: course2.id,
+      semester: 'Semester 2',
+      status: 'active',
+    },
+  });
+  console.log('✅ Enrolled', student.name, 'to', course2.title);
+
+  const assignment2 = await prisma.assignment.create({
+    data: {
+      title: 'Implementasi Promise & Async Await',
+      description:
+        'Buat aplikasi dengan multiple async operations menggunakan Promise dan Async/Await',
+      code: 'ASG-ASYNC',
+      brief:
+        'Implementasikan promise chain dan async/await dalam aplikasi real-world.',
+      dueDate: new Date('2026-03-15'),
+      courseId: course2.id,
+    },
+  });
+  console.log('✅ Created assignment 2:', assignment2.title);
+
+  const quiz2 = await prisma.quiz.create({
+    data: {
+      title: 'Quiz Async JavaScript',
+      description: 'Pengujian pemahaman async programming di JavaScript',
+      duration: 30,
+      courseId: course2.id,
+    },
+  });
+  console.log('✅ Created quiz 2:', quiz2.title);
+
+  await prisma.question.create({
+    data: {
+      question: 'Apa itu Promise di JavaScript?',
+      optionA: 'Fungsi yang mengembalikan hasil dengan delay',
+      optionB:
+        'Objek yang merepresentasikan penyelesaian atau kegagalan dari operasi asynchronous',
+      optionC: 'Variable yang menyimpan data',
+      optionD: 'Method untuk memanggil API',
+      correctAnswer: 'B',
+      order: 1,
+      quizId: quiz2.id,
+    },
+  });
+
+  await prisma.question.create({
+    data: {
+      question: 'Keyword apa yang digunakan untuk menunggu Promise?',
+      optionA: 'wait',
+      optionB: 'pause',
+      optionC: 'await',
+      optionD: 'delay',
+      correctAnswer: 'C',
+      order: 2,
+      quizId: quiz2.id,
+    },
+  });
+
+  console.log('✅ Created 2 questions for quiz 2');
+
+  // ==========================================
+  // COURSE 3: Database Design & SQL
+  // ==========================================
+  const course3 = await prisma.course.create({
+    data: {
+      title: 'Database Design & SQL',
+      description:
+        'Desain database relasional dan query SQL untuk aplikasi enterprise',
+      code: 'DB-301',
+      lecturerId: lecturer.id,
+    },
+  });
+  console.log('✅ Created course 3:', course3.title);
+
+  await prisma.enrollment.create({
+    data: {
+      studentId: student.id,
+      courseId: course3.id,
+      semester: 'Semester 3',
+      status: 'active',
+    },
+  });
+  console.log('✅ Enrolled', student.name, 'to', course3.title);
+
+  const assignment3 = await prisma.assignment.create({
+    data: {
+      title: 'Desain Database E-Commerce',
+      description:
+        'Buat skema database lengkap untuk aplikasi e-commerce dengan normalisasi yang tepat',
+      code: 'ASG-DB',
+      brief:
+        'Desain database relasional dengan proper normalization untuk e-commerce platform.',
+      dueDate: new Date('2026-04-20'),
+      courseId: course3.id,
+    },
+  });
+  console.log('✅ Created assignment 3:', assignment3.title);
+
+  const quiz3 = await prisma.quiz.create({
+    data: {
+      title: 'Quiz SQL Fundamentals',
+      description: 'Pengujian dasar-dasar SQL dan database design',
+      duration: 25,
+      courseId: course3.id,
+    },
+  });
+  console.log('✅ Created quiz 3:', quiz3.title);
+
+  await prisma.question.create({
+    data: {
+      question: 'Apa itu Primary Key dalam database?',
+      optionA: 'Key yang paling penting',
+      optionB: 'Identitas unik yang membedakan setiap record dalam tabel',
+      optionC: 'Key untuk enkripsi data',
+      optionD: 'Key yang digunakan untuk backups',
+      correctAnswer: 'B',
+      order: 1,
+      quizId: quiz3.id,
+    },
+  });
+
+  await prisma.question.create({
+    data: {
+      question: 'JOIN mana yang mengembalikan semua record dari kedua tabel?',
+      optionA: 'INNER JOIN',
+      optionB: 'LEFT JOIN',
+      optionC: 'FULL OUTER JOIN',
+      optionD: 'CROSS JOIN',
+      correctAnswer: 'C',
+      order: 2,
+      quizId: quiz3.id,
+    },
+  });
+
+  console.log('✅ Created 2 questions for quiz 3');
+
+  console.log('\n✅ All example data seeded successfully!');
   console.log('\n📋 Example Credentials:');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('Lecturer (Dr. Budi Santoso):');
@@ -135,18 +288,19 @@ async function main() {
   console.log('  Email:', student.email);
   console.log('  Password: password123');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('\n📚 Example Course:');
-  console.log('  Title:', course.title);
-  console.log('  Code:', course.code);
-  console.log('  ID:', course.id);
+  console.log('\n📚 Example Courses (3):');
   console.log('');
-  console.log('📝 Example Assignment:');
-  console.log('  Title:', assignment.title);
-  console.log('  Code:', assignment.code);
+  console.log('1️⃣  Web Development Basics (WEB-101)');
+  console.log('   📝 Assignment: Membuat Halaman Login');
+  console.log('   ❓ Quiz: Quiz HTML & CSS Basics');
   console.log('');
-  console.log('❓ Example Quiz:');
-  console.log('  Title:', quiz.title);
-  console.log('  Duration:', quiz.duration, 'minutes');
+  console.log('2️⃣  Advanced JavaScript (JS-201)');
+  console.log('   📝 Assignment: Implementasi Promise & Async Await');
+  console.log('   ❓ Quiz: Quiz Async JavaScript');
+  console.log('');
+  console.log('3️⃣  Database Design & SQL (DB-301)');
+  console.log('   📝 Assignment: Desain Database E-Commerce');
+  console.log('   ❓ Quiz: Quiz SQL Fundamentals');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
 
