@@ -17,36 +17,57 @@ export class EnrollmentsService {
    */
 
   async enrollCourse(studentId: number, courseId: number) {
-    // 1️⃣ check course exists
-    const course = await this.prisma.course.findUnique({
-      where: { id: courseId },
-    });
+    try {
+      // 1️⃣ check course exists
+      const course = await this.prisma.course.findUnique({
+        where: { id: courseId },
+      });
 
-    if (!course) {
-      throw new NotFoundException('Course not found');
-    }
+      if (!course) {
+        throw new NotFoundException('Course not found');
+      }
 
-    // 2️⃣ prevent duplicate enrollment
-    const existing = await this.prisma.enrollment.findUnique({
-      where: {
-        studentId_courseId: {
+      // 2️⃣ prevent duplicate enrollment
+      const existing = await this.prisma.enrollment.findUnique({
+        where: {
+          studentId_courseId: {
+            studentId,
+            courseId,
+          },
+        },
+      });
+
+      if (existing) {
+        throw new BadRequestException('Already enrolled');
+      }
+
+      // 3️⃣ create enrollment with default values
+      return this.prisma.enrollment.create({
+        data: {
           studentId,
           courseId,
+          semester: 'Semester 1',
+          status: 'active',
         },
-      },
-    });
-
-    if (existing) {
-      throw new BadRequestException('Already enrolled');
+        include: {
+          course: {
+            include: {
+              lecturer: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      // Log the error for debugging
+      console.error('Error enrolling course:', error);
+      throw error;
     }
-
-    // 3️⃣ create enrollment
-    return this.prisma.enrollment.create({
-      data: {
-        studentId,
-        courseId,
-      },
-    });
   }
 
   async getStudentEnrollments(studentId: number) {
