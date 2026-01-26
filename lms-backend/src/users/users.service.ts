@@ -20,6 +20,7 @@ export class UsersService {
         email: true,
         phone: true,
         role: true,
+        profileImageUrl: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -32,7 +33,11 @@ export class UsersService {
     return user;
   }
 
-  async updateProfile(userId: number, dto: UpdateProfileDto) {
+  async updateProfile(
+    userId: number,
+    dto: UpdateProfileDto,
+    file?: Express.Multer.File,
+  ) {
     // Check if email is being changed and if it's already taken
     if (dto.email) {
       const existingUser = await this.prisma.user.findUnique({
@@ -53,6 +58,10 @@ export class UsersService {
       updateData.password = await bcrypt.hash(dto.password, 10);
     }
 
+    if (file) {
+      updateData.profileImageUrl = `/uploads/profiles/${file.filename}`;
+    }
+
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: updateData,
@@ -62,6 +71,7 @@ export class UsersService {
         email: true,
         phone: true,
         role: true,
+        profileImageUrl: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -79,6 +89,7 @@ export class UsersService {
         email: true,
         phone: true,
         role: true,
+        profileImageUrl: true,
         createdAt: true,
         _count: {
           select: {

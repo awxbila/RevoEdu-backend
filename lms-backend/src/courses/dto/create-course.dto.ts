@@ -2,12 +2,14 @@ import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCourseDto {
-  @ApiProperty({ example: 'Backend Development' })
+  @ApiProperty({ example: 'Web Development Basics' })
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ example: 'Learn NestJS from scratch' })
+  @ApiProperty({
+    example: 'Dasar-dasar web development dengan HTML, CSS, JavaScript',
+  })
   @IsString()
   @IsNotEmpty()
   description: string;

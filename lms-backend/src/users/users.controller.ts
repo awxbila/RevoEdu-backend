@@ -6,10 +6,14 @@ import {
   UseGuards,
   Request,
   Param,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { profileMulterConfig } from '../config/multer.profile.config';
 
 @Controller('users')
 export class UsersController {
@@ -25,8 +29,13 @@ export class UsersController {
   // ✏️ Update current user profile
   @UseGuards(JwtAuthGuard)
   @Patch('profile')
-  updateProfile(@Request() req: any, @Body() dto: UpdateProfileDto) {
-    return this.usersService.updateProfile(req.user.id, dto);
+  @UseInterceptors(FileInterceptor('image', profileMulterConfig))
+  updateProfile(
+    @Request() req: any,
+    @Body() dto: UpdateProfileDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.usersService.updateProfile(req.user.id, dto, file);
   }
 
   // 👨‍🏫 Get lecturer detail

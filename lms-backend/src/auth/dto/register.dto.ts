@@ -9,16 +9,16 @@ import {
 } from 'class-validator';
 
 export class RegisterDto {
-  @ApiProperty({ example: 'Nabilah' })
+  @ApiProperty({ example: 'Student Example' })
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: 'Bila@example.com' })
+  @ApiProperty({ example: 'student@example.com' })
   @IsEmail()
   email: string;
 
-  @ApiProperty({ example: 'Bilacantik26' })
+  @ApiProperty({ example: 'password123' })
   @IsString()
   @MinLength(6)
   password: string;

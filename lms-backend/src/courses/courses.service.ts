@@ -31,6 +31,25 @@ export class CoursesService {
             phone: true,
           },
         },
+        assignments: {
+          select: {
+            id: true,
+            title: true,
+            code: true,
+            brief: true,
+            dueDate: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+        quizzes: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            duration: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -56,6 +75,25 @@ export class CoursesService {
             enrollments: true,
             assignments: true,
           },
+        },
+        assignments: {
+          select: {
+            id: true,
+            title: true,
+            code: true,
+            brief: true,
+            dueDate: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+        quizzes: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            duration: true,
+          },
+          orderBy: { createdAt: 'desc' },
         },
       },
     });

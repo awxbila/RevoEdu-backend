@@ -11,7 +11,12 @@ import {
   UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../config/multer.config';
 
@@ -41,6 +46,47 @@ export class CoursesController {
   // 🔍 Get all courses
   @Roles('STUDENT', 'LECTURER')
   @Get()
+  @ApiOkResponse({
+    schema: {
+      example: [
+        {
+          id: 101,
+          title: 'Web Development Basics',
+          description:
+            'Dasar-dasar web development dengan HTML, CSS, JavaScript',
+          code: 'WEB-101',
+          imageUrl: null,
+          lecturerId: 1,
+          lecturer: {
+            id: 1,
+            name: 'Dr. Budi Santoso',
+            email: 'budi@example.com',
+            phone: '081234567890',
+          },
+          assignments: [
+            {
+              id: 'a-1',
+              title: 'Membuat Halaman Login',
+              code: 'ASG-LOGIN',
+              brief:
+                'Buat halaman login dengan email dan password, validasi form.',
+              dueDate: '2026-02-15T00:00:00.000Z',
+            },
+          ],
+          quizzes: [
+            {
+              id: 'q-1',
+              title: 'Quiz HTML & CSS Basics',
+              description: 'Dasar HTML dan CSS',
+              duration: 20,
+            },
+          ],
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+        },
+      ],
+    },
+  })
   findAll() {
     return this.coursesService.findAll();
   }
@@ -48,6 +94,63 @@ export class CoursesController {
   // 🔍 Get course detail
   @Roles('STUDENT', 'LECTURER')
   @Get(':id')
+  @ApiOkResponse({
+    schema: {
+      example: {
+        id: 101,
+        title: 'Web Development Basics',
+        description: 'Dasar-dasar web development dengan HTML, CSS, JavaScript',
+        code: 'WEB-101',
+        imageUrl: null,
+        lecturerId: 1,
+        lecturer: {
+          id: 1,
+          name: 'Dr. Budi Santoso',
+          email: 'budi@example.com',
+          phone: '081234567890',
+          role: 'LECTURER',
+        },
+        assignments: [
+          {
+            id: 'a-1',
+            title: 'Membuat Halaman Login',
+            code: 'ASG-LOGIN',
+            brief:
+              'Buat halaman login dengan email dan password. Gunakan form validation.',
+            dueDate: '2026-02-15T00:00:00.000Z',
+          },
+          {
+            id: 'a-2',
+            title: 'Implementasi Database',
+            code: 'ASG-DB',
+            brief:
+              'Desain database schema untuk users, assignments, submissions, courses.',
+            dueDate: '2026-01-20T00:00:00.000Z',
+          },
+        ],
+        quizzes: [
+          {
+            id: 'q-1',
+            title: 'Quiz HTML & CSS Basics',
+            description: 'Quiz dasar HTML/CSS',
+            duration: 20,
+          },
+          {
+            id: 'q-2',
+            title: 'Quiz JavaScript Fundamentals',
+            description: 'Konsep dasar JS',
+            duration: 15,
+          },
+        ],
+        _count: {
+          enrollments: 1,
+          assignments: 2,
+        },
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      },
+    },
+  })
   findOne(@Param('id') id: string) {
     return this.coursesService.findOne(Number(id));
   }
