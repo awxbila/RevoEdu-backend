@@ -14,6 +14,14 @@ export class CreateCourseDto {
   @IsNotEmpty()
   description: string;
 
+  @ApiProperty({
+    example: 'Penjelasan singkat course yang bisa dilihat semua student',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  brief?: string;
+
   @ApiPropertyOptional({ example: 'WEB-101' })
   @IsString()
   @IsOptional()

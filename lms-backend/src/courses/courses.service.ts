@@ -22,7 +22,14 @@ export class CoursesService {
 
   async findAll() {
     return this.prisma.course.findMany({
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        brief: true,
+        imageUrl: true,
+        code: true,
+        lecturerId: true,
         lecturer: {
           select: {
             id: true,
@@ -50,6 +57,8 @@ export class CoursesService {
           },
           orderBy: { createdAt: 'desc' },
         },
+        createdAt: true,
+        updatedAt: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -60,7 +69,14 @@ export class CoursesService {
   async findOne(courseId: number) {
     const course = await this.prisma.course.findUnique({
       where: { id: courseId },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        brief: true,
+        imageUrl: true,
+        code: true,
+        lecturerId: true,
         lecturer: {
           select: {
             id: true,
@@ -95,6 +111,8 @@ export class CoursesService {
           },
           orderBy: { createdAt: 'desc' },
         },
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -127,6 +145,7 @@ export class CoursesService {
       data: {
         title: dto.title,
         description: dto.description,
+        brief: dto.brief,
         imageUrl,
         code: dto.code,
         lecturerId,
@@ -153,6 +172,7 @@ export class CoursesService {
       data: {
         title: dto.title,
         description: dto.description,
+        brief: dto.brief,
         code: dto.code,
       },
     });
