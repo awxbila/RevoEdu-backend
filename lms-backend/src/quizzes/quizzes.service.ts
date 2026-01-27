@@ -159,20 +159,24 @@ export class QuizzesService {
         course: { select: { id: true, title: true } },
         submissions: {
           where: { studentId },
-          select: { id: true },
+          select: { id: true, score: true },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    return quizzes.map((quiz) => ({
-      id: quiz.id,
-      title: quiz.title,
-      courseId: quiz.courseId,
-      courseName: quiz.course.title,
-      questionCount: quiz._count.questions,
-      isCompleted: quiz.submissions.length > 0,
-    }));
+    return quizzes.map((quiz) => {
+      const submission = quiz.submissions[0];
+      return {
+        id: quiz.id,
+        title: quiz.title,
+        courseId: quiz.courseId,
+        courseName: quiz.course.title,
+        questionCount: quiz._count.questions,
+        isCompleted: !!submission,
+        score: submission ? submission.score : null,
+      };
+    });
   }
 
   async findOne(quizId: string, userId: number, userRole: string) {
