@@ -89,7 +89,6 @@ async function main() {
     data: {
       studentId: student.id,
       courseId: course.id,
-      semester: 'Semester 1',
       status: 'active',
     },
   });
@@ -173,7 +172,6 @@ async function main() {
     data: {
       studentId: student.id,
       courseId: course2.id,
-      semester: 'Semester 2',
       status: 'active',
     },
   });
@@ -255,7 +253,6 @@ async function main() {
     data: {
       studentId: student.id,
       courseId: course3.id,
-      semester: 'Semester 3',
       status: 'active',
     },
   });

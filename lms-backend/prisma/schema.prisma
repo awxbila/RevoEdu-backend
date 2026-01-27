@@ -54,7 +54,7 @@ model Enrollment {
 
   studentId Int
   courseId  Int
-  semester  String?
+  // semester field removed
   status    String?
 
   student User   @relation(fields: [studentId], references: [id])

@@ -16,7 +16,7 @@ export class EnrollmentsService {
    * ===============================
    */
 
-  async enrollCourse(studentId: number, courseId: number, semester?: string) {
+  async enrollCourse(studentId: number, courseId: number) {
     try {
       // 1️⃣ check course exists
       const course = await this.prisma.course.findUnique({
@@ -46,7 +46,6 @@ export class EnrollmentsService {
         data: {
           studentId,
           courseId,
-          semester: semester ?? 'Semester 1',
           status: 'active',
         },
         include: {
