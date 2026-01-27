@@ -16,7 +16,7 @@ export class EnrollmentsService {
    * ===============================
    */
 
-  async enrollCourse(studentId: number, courseId: number) {
+  async enrollCourse(studentId: number, courseId: number, semester?: string) {
     try {
       // 1️⃣ check course exists
       const course = await this.prisma.course.findUnique({
@@ -42,14 +42,11 @@ export class EnrollmentsService {
       }
 
       // 3️⃣ create enrollment, gunakan semester dari input jika ada
-      // NOTE: Tambahkan parameter semester ke method
-      // (ubah signature: enrollCourse(studentId: number, courseId: number, semester?: string))
-      const semester = arguments[2] ?? 'Semester 1';
       return this.prisma.enrollment.create({
         data: {
           studentId,
           courseId,
-          semester,
+          semester: semester ?? 'Semester 1',
           status: 'active',
         },
         include: {
