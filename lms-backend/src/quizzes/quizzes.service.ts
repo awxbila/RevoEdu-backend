@@ -167,6 +167,8 @@ export class QuizzesService {
 
     return quizzes.map((quiz) => {
       const submission = quiz.submissions[0];
+      // Ambil dueDate manual dari quiz (meski tidak ada di type, field tetap ada di hasil Prisma)
+      const dueDate = (quiz as { dueDate?: Date }).dueDate;
       return {
         id: quiz.id,
         title: quiz.title,
@@ -175,7 +177,7 @@ export class QuizzesService {
         questionCount: quiz._count.questions,
         isCompleted: !!submission,
         score: submission ? submission.score : null,
-        dueDate: (quiz as any).dueDate,
+        dueDate,
       };
     });
   }
@@ -214,6 +216,13 @@ export class QuizzesService {
 
       if (!enrollment) {
         throw new ForbiddenException('You are not enrolled in this course');
+      }
+
+      // Batasi akses jika sudah lewat dueDate
+      if (quiz.dueDate && new Date() > quiz.dueDate) {
+        throw new ForbiddenException(
+          'Quiz sudah melewati deadline dan tidak bisa dikerjakan',
+        );
       }
 
       // Check if already submitted
@@ -311,14 +320,43 @@ export class QuizzesService {
     // Get quiz with questions
     const quiz = await this.prisma.quiz.findUnique({
       where: { id: quizId },
-      include: {
-        questions: true,
-        course: true,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        duration: true,
+        dueDate: true,
+        courseId: true,
+        questions: {
+          select: {
+            id: true,
+            question: true,
+            optionA: true,
+            optionB: true,
+            optionC: true,
+            optionD: true,
+            correctAnswer: true,
+            order: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
       },
     });
 
     if (!quiz) {
       throw new NotFoundException('Quiz not found');
+    }
+
+    // Batasi submit jika sudah lewat dueDate
+    if (quiz.dueDate && new Date() > quiz.dueDate) {
+      throw new ForbiddenException(
+        'Quiz sudah melewati deadline dan tidak bisa dikerjakan',
+      );
     }
 
     // Check enrollment
