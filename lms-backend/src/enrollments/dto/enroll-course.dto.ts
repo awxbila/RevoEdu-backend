@@ -9,4 +9,12 @@ export class EnrollCourseDto {
   @IsString()
   @IsNotEmpty()
   courseId: string;
+
+  @ApiProperty({
+    example: 'Genap',
+    required: false,
+    description: 'Semester (opsional)',
+  })
+  @IsString()
+  semester?: string;
 }

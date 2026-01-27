@@ -41,6 +41,7 @@ export class EnrollmentsController {
     return this.enrollmentsService.enrollCourse(
       req.user.id,
       Number(dto.courseId),
+      dto.semester,
     );
   }
 

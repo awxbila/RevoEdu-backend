@@ -41,12 +41,15 @@ export class EnrollmentsService {
         throw new BadRequestException('Already enrolled');
       }
 
-      // 3️⃣ create enrollment with default values
+      // 3️⃣ create enrollment, gunakan semester dari input jika ada
+      // NOTE: Tambahkan parameter semester ke method
+      // (ubah signature: enrollCourse(studentId: number, courseId: number, semester?: string))
+      const semester = arguments[2] ?? 'Semester 1';
       return this.prisma.enrollment.create({
         data: {
           studentId,
           courseId,
-          semester: 'Semester 1',
+          semester,
           status: 'active',
         },
         include: {
