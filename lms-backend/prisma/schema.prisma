@@ -120,6 +120,7 @@ model Quiz {
   title       String
   description String?
   duration    Int?    // Durasi dalam menit (optional)
+  dueDate     DateTime? // Deadline pengerjaan quiz
 
   courseId Int
   course   Course @relation(fields: [courseId], references: [id])

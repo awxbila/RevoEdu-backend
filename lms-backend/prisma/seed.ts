@@ -115,6 +115,7 @@ async function main() {
       title: 'Quiz HTML & CSS Basics',
       description: 'Dasar HTML dan CSS',
       duration: 20,
+      dueDate: new Date('2025-12-01'), // overdue
       courseId: course.id,
     },
   });
@@ -196,6 +197,7 @@ async function main() {
       title: 'Quiz Async JavaScript',
       description: 'Pengujian pemahaman async programming di JavaScript',
       duration: 30,
+      dueDate: new Date('2026-03-15'),
       courseId: course2.id,
     },
   });
@@ -277,6 +279,7 @@ async function main() {
       title: 'Quiz SQL Fundamentals',
       description: 'Pengujian dasar-dasar SQL dan database design',
       duration: 25,
+      dueDate: new Date('2026-04-20'),
       courseId: course3.id,
     },
   });

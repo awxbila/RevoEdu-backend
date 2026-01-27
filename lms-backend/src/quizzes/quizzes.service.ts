@@ -175,6 +175,7 @@ export class QuizzesService {
         questionCount: quiz._count.questions,
         isCompleted: !!submission,
         score: submission ? submission.score : null,
+        dueDate: (quiz as any).dueDate,
       };
     });
   }
