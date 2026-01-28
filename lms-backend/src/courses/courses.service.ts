@@ -69,6 +69,64 @@ export class CoursesService {
     });
   }
 
+  // Get courses by lecturer ID (for lecturer activity)
+  async findByLecturer(lecturerId: number) {
+    this.logger.log(`Fetching courses for lecturer ${lecturerId}`);
+    return this.prisma.course.findMany({
+      where: { lecturerId },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        brief: true,
+        imageUrl: true,
+        code: true,
+        lecturerId: true,
+        lecturer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+        _count: {
+          select: {
+            enrollments: true,
+            assignments: true,
+            quizzes: true,
+          },
+        },
+        assignments: {
+          select: {
+            id: true,
+            title: true,
+            code: true,
+            brief: true,
+            dueDate: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+        quizzes: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            duration: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
   async findOne(courseId: number) {
     const course = await this.prisma.course.findUnique({
       where: { id: courseId },

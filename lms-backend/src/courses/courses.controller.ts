@@ -96,7 +96,18 @@ export class CoursesController {
     return this.coursesService.findAll();
   }
 
-  // 🔍 Get course detail
+  //  Get courses by lecturer (for lecturer activity)
+  @Roles('LECTURER')
+  @Get('my-courses')
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: 'Get all courses created by the logged-in lecturer',
+  })
+  async getMyCourses(@Request() req: any) {
+    this.logger.log(`GET /courses/my-courses - Lecturer ${req.user.id}`);
+    return this.coursesService.findByLecturer(req.user.id);
+  }
+
   @Roles('STUDENT', 'LECTURER')
   @Get(':id')
   @ApiOkResponse({
