@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateQuizDto } from './dto/create-quiz.dto';
@@ -11,65 +12,90 @@ import { SubmitQuizDto } from './dto/submit-quiz.dto';
 
 @Injectable()
 export class QuizzesService {
+  private readonly logger = new Logger(QuizzesService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   // ============= LECTURER METHODS =============
 
   async create(dto: CreateQuizDto, lecturerId: number) {
-    // Verify course ownership
-    const course = await this.prisma.course.findUnique({
-      where: { id: dto.courseId },
-    });
+    try {
+      this.logger.log(
+        `Lecturer ${lecturerId} creating quiz: ${dto.title} for course ${dto.courseId}`,
+      );
 
-    if (!course) {
-      throw new NotFoundException('Course not found');
-    }
+      // Verify course ownership
+      const course = await this.prisma.course.findUnique({
+        where: { id: dto.courseId },
+      });
 
-    if (course.lecturerId !== lecturerId) {
-      throw new ForbiddenException('Not your course');
-    }
+      if (!course) {
+        this.logger.warn(`Course not found: ${dto.courseId}`);
+        throw new NotFoundException('Course not found');
+      }
 
-    // Create quiz with questions
-    return this.prisma.quiz.create({
-      data: {
-        title: dto.title,
-        description: dto.description,
-        duration: dto.duration,
-        courseId: dto.courseId,
-        questions: {
-          create: dto.questions.map((q) => ({
-            question: q.question,
-            optionA: q.optionA,
-            optionB: q.optionB,
-            optionC: q.optionC,
-            optionD: q.optionD,
-            correctAnswer: q.correctAnswer,
-            order: q.order,
-          })),
-        },
-      },
-      include: {
-        questions: {
-          orderBy: { order: 'asc' },
-          select: {
-            id: true,
-            question: true,
-            optionA: true,
-            optionB: true,
-            optionC: true,
-            optionD: true,
-            order: true,
-            // Don't include correctAnswer for security
+      if (course.lecturerId !== lecturerId) {
+        this.logger.warn(
+          `Lecturer ${lecturerId} attempting to create quiz for course owned by ${course.lecturerId}`,
+        );
+        throw new ForbiddenException('Not your course');
+      }
+
+      this.logger.debug(`Creating ${dto.questions.length} questions for quiz`);
+
+      // Create quiz with questions
+      const quiz = await this.prisma.quiz.create({
+        data: {
+          title: dto.title,
+          description: dto.description,
+          duration: dto.duration,
+          courseId: dto.courseId,
+          questions: {
+            create: dto.questions.map((q) => ({
+              question: q.question,
+              optionA: q.optionA,
+              optionB: q.optionB,
+              optionC: q.optionC,
+              optionD: q.optionD,
+              correctAnswer: q.correctAnswer,
+              order: q.order,
+            })),
           },
         },
-        course: {
-          select: {
-            id: true,
-            title: true,
+        include: {
+          questions: {
+            orderBy: { order: 'asc' },
+            select: {
+              id: true,
+              question: true,
+              optionA: true,
+              optionB: true,
+              optionC: true,
+              optionD: true,
+              order: true,
+              // Don't include correctAnswer for security
+            },
+          },
+          course: {
+            select: {
+              id: true,
+              title: true,
+            },
           },
         },
-      },
-    });
+      });
+
+      this.logger.log(
+        `Quiz created successfully: ${quiz.id} with ${quiz.questions.length} questions`,
+      );
+      return quiz;
+    } catch (error) {
+      this.logger.error(
+        `Error creating quiz for lecturer ${lecturerId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 
   async findAllByCourse(courseId: number, userId: number, userRole: string) {
@@ -272,46 +298,82 @@ export class QuizzesService {
   }
 
   async update(quizId: string, dto: UpdateQuizDto, lecturerId: number) {
-    const quiz = await this.prisma.quiz.findUnique({
-      where: { id: quizId },
-      include: { course: true },
-    });
+    try {
+      this.logger.log(`Lecturer ${lecturerId} updating quiz ${quizId}`);
 
-    if (!quiz) {
-      throw new NotFoundException('Quiz not found');
+      const quiz = await this.prisma.quiz.findUnique({
+        where: { id: quizId },
+        include: { course: true },
+      });
+
+      if (!quiz) {
+        this.logger.warn(`Quiz not found: ${quizId}`);
+        throw new NotFoundException('Quiz not found');
+      }
+
+      if (quiz.course.lecturerId !== lecturerId) {
+        this.logger.warn(
+          `Lecturer ${lecturerId} attempting to update quiz ${quizId} owned by ${quiz.course.lecturerId}`,
+        );
+        throw new ForbiddenException('Not your quiz');
+      }
+
+      const updatedQuiz = await this.prisma.quiz.update({
+        where: { id: quizId },
+        data: {
+          ...(dto.title && { title: dto.title }),
+          ...(dto.description !== undefined && {
+            description: dto.description,
+          }),
+          ...(dto.duration !== undefined && { duration: dto.duration }),
+        },
+      });
+
+      this.logger.log(`Quiz ${quizId} updated successfully`);
+      return updatedQuiz;
+    } catch (error) {
+      this.logger.error(
+        `Error updating quiz ${quizId} for lecturer ${lecturerId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
     }
-
-    if (quiz.course.lecturerId !== lecturerId) {
-      throw new ForbiddenException('Not your quiz');
-    }
-
-    return this.prisma.quiz.update({
-      where: { id: quizId },
-      data: {
-        ...(dto.title && { title: dto.title }),
-        ...(dto.description !== undefined && { description: dto.description }),
-        ...(dto.duration !== undefined && { duration: dto.duration }),
-      },
-    });
   }
 
   async delete(quizId: string, lecturerId: number) {
-    const quiz = await this.prisma.quiz.findUnique({
-      where: { id: quizId },
-      include: { course: true },
-    });
+    try {
+      this.logger.log(`Lecturer ${lecturerId} deleting quiz ${quizId}`);
 
-    if (!quiz) {
-      throw new NotFoundException('Quiz not found');
+      const quiz = await this.prisma.quiz.findUnique({
+        where: { id: quizId },
+        include: { course: true },
+      });
+
+      if (!quiz) {
+        this.logger.warn(`Quiz not found: ${quizId}`);
+        throw new NotFoundException('Quiz not found');
+      }
+
+      if (quiz.course.lecturerId !== lecturerId) {
+        this.logger.warn(
+          `Lecturer ${lecturerId} attempting to delete quiz ${quizId} owned by ${quiz.course.lecturerId}`,
+        );
+        throw new ForbiddenException('Not your quiz');
+      }
+
+      const deletedQuiz = await this.prisma.quiz.delete({
+        where: { id: quizId },
+      });
+
+      this.logger.log(`Quiz ${quizId} deleted successfully`);
+      return deletedQuiz;
+    } catch (error) {
+      this.logger.error(
+        `Error deleting quiz ${quizId} for lecturer ${lecturerId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
     }
-
-    if (quiz.course.lecturerId !== lecturerId) {
-      throw new ForbiddenException('Not your quiz');
-    }
-
-    return this.prisma.quiz.delete({
-      where: { id: quizId },
-    });
   }
 
   // ============= STUDENT METHODS =============

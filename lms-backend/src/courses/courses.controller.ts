@@ -10,12 +10,15 @@ import {
   Request,
   UseInterceptors,
   UploadedFile,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiBearerAuth,
   ApiConsumes,
   ApiOkResponse,
+  ApiBody,
+  ApiProperty,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../config/multer.config';
@@ -35,6 +38,8 @@ import { moduleMulterConfig } from '../config/multer.modules.config';
 @Controller('courses')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CoursesController {
+  private readonly logger = new Logger(CoursesController.name);
+
   constructor(private readonly coursesService: CoursesService) {}
 
   /**
@@ -166,12 +171,26 @@ export class CoursesController {
   @Post()
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('image', multerConfig))
-  create(
+  async create(
     @Body() dto: CreateCourseDto,
     @Request() req: any,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.coursesService.create(dto, req.user.id, file);
+    try {
+      this.logger.log(
+        `POST /courses - Creating course: ${dto.code} by lecturer ${req.user.id}`,
+      );
+      this.logger.debug(`File received: ${file ? file.filename : 'none'}`);
+      const result = await this.coursesService.create(dto, req.user.id, file);
+      this.logger.log(`Course created successfully: ${result.id}`);
+      return result;
+    } catch (error) {
+      this.logger.error(
+        `Error in POST /courses: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 
   // ✏️ Update course
@@ -189,14 +208,65 @@ export class CoursesController {
   @Roles('LECTURER')
   @Post(':id/modules')
   @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth()
+  @ApiBody({
+    description: 'Upload course module with file',
+    schema: {
+      type: 'object',
+      required: ['file', 'title'],
+      properties: {
+        title: {
+          type: 'string',
+          example: 'Pertemuan 1 - Introduksi',
+          description: 'Module title (required)',
+        },
+        description: {
+          type: 'string',
+          example: 'Materi pengenalan dasar',
+          description: 'Module description (optional)',
+        },
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'PDF, PPT, or Video file (required)',
+        },
+      },
+    },
+  })
   @UseInterceptors(FileInterceptor('file', moduleMulterConfig))
-  addModule(
+  async addModule(
     @Param('id') id: string,
     @Body() dto: CreateCourseModuleDto,
     @UploadedFile() file: Express.Multer.File,
     @Request() req: any,
   ) {
-    return this.coursesService.addModule(Number(id), dto, req.user.id, file);
+    try {
+      this.logger.log(
+        `POST /courses/${id}/modules - Adding module by lecturer ${req.user.id}`,
+      );
+      if (!file) {
+        this.logger.warn(`No file provided for module upload to course ${id}`);
+      }
+      this.logger.debug(
+        `Module file: ${file ? file.filename + ' (' + file.mimetype + ')' : 'none'}`,
+      );
+      const result = await this.coursesService.addModule(
+        Number(id),
+        dto,
+        req.user.id,
+        file,
+      );
+      this.logger.log(
+        `Module added successfully: ${result.id} to course ${id}`,
+      );
+      return result;
+    } catch (error) {
+      this.logger.error(
+        `Error in POST /courses/${id}/modules: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 
   // 📂 List course modules (enrolled students & lecturer)

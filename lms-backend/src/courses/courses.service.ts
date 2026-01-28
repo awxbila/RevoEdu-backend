@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { ModuleType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -12,6 +13,8 @@ import { CreateCourseModuleDto } from './dto/create-course-module.dto';
 
 @Injectable()
 export class CoursesService {
+  private readonly logger = new Logger(CoursesService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -134,67 +137,123 @@ export class CoursesService {
     lecturerId: number,
     file?: Express.Multer.File,
   ) {
-    let imageUrl: string | null = null;
+    try {
+      this.logger.log(
+        `Lecturer ${lecturerId} creating course: ${dto.code} - ${dto.title}`,
+      );
 
-    if (file) {
-      // Generate URL for uploaded image
-      imageUrl = `/uploads/courses/${file.filename}`;
+      let imageUrl: string | null = null;
+
+      if (file) {
+        // Generate URL for uploaded image
+        imageUrl = `/uploads/courses/${file.filename}`;
+        this.logger.debug(`Course image uploaded: ${file.filename}`);
+      }
+
+      const course = await this.prisma.course.create({
+        data: {
+          title: dto.title,
+          description: dto.description,
+          brief: dto.brief,
+          imageUrl,
+          code: dto.code,
+          lecturerId,
+        },
+      });
+
+      this.logger.log(
+        `Course created successfully: ${course.id} (${course.code})`,
+      );
+      return course;
+    } catch (error) {
+      this.logger.error(
+        `Error creating course for lecturer ${lecturerId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
     }
-
-    return this.prisma.course.create({
-      data: {
-        title: dto.title,
-        description: dto.description,
-        brief: dto.brief,
-        imageUrl,
-        code: dto.code,
-        lecturerId,
-      },
-    });
   }
 
   async update(courseId: number, dto: UpdateCourseDto, lecturerId: number) {
-    const course = await this.prisma.course.findUnique({
-      where: { id: courseId },
-    });
+    try {
+      this.logger.log(`Lecturer ${lecturerId} updating course ${courseId}`);
 
-    if (!course) {
-      throw new NotFoundException('Course not found');
+      const course = await this.prisma.course.findUnique({
+        where: { id: courseId },
+      });
+
+      if (!course) {
+        this.logger.warn(`Course not found: ${courseId}`);
+        throw new NotFoundException('Course not found');
+      }
+
+      // 🔒 Ownership check
+      if (course.lecturerId !== lecturerId) {
+        this.logger.warn(
+          `Lecturer ${lecturerId} attempted to update course ${courseId} owned by ${course.lecturerId}`,
+        );
+        throw new ForbiddenException(
+          'You are not allowed to update this course',
+        );
+      }
+
+      const updatedCourse = await this.prisma.course.update({
+        where: { id: courseId },
+        data: {
+          title: dto.title,
+          description: dto.description,
+          brief: dto.brief,
+          code: dto.code,
+        },
+      });
+
+      this.logger.log(`Course ${courseId} updated successfully`);
+      return updatedCourse;
+    } catch (error) {
+      this.logger.error(
+        `Error updating course ${courseId} for lecturer ${lecturerId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
     }
-
-    // 🔒 Ownership check
-    if (course.lecturerId !== lecturerId) {
-      throw new ForbiddenException('You are not allowed to update this course');
-    }
-
-    return this.prisma.course.update({
-      where: { id: courseId },
-      data: {
-        title: dto.title,
-        description: dto.description,
-        brief: dto.brief,
-        code: dto.code,
-      },
-    });
   }
 
   async remove(courseId: number, lecturerId: number) {
-    const course = await this.prisma.course.findUnique({
-      where: { id: courseId },
-    });
+    try {
+      this.logger.log(`Lecturer ${lecturerId} deleting course ${courseId}`);
 
-    if (!course) {
-      throw new NotFoundException('Course not found');
+      const course = await this.prisma.course.findUnique({
+        where: { id: courseId },
+      });
+
+      if (!course) {
+        this.logger.warn(`Course not found: ${courseId}`);
+        throw new NotFoundException('Course not found');
+      }
+
+      // 🔒 Ownership check
+      if (course.lecturerId !== lecturerId) {
+        this.logger.warn(
+          `Lecturer ${lecturerId} attempted to delete course ${courseId} owned by ${course.lecturerId}`,
+        );
+        throw new ForbiddenException(
+          'You are not allowed to delete this course',
+        );
+      }
+
+      const deletedCourse = await this.prisma.course.delete({
+        where: { id: courseId },
+      });
+
+      this.logger.log(`Course ${courseId} deleted successfully`);
+      return deletedCourse;
+    } catch (error) {
+      this.logger.error(
+        `Error deleting course ${courseId} for lecturer ${lecturerId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
     }
-
-    // 🔒 Ownership check
-    if (course.lecturerId !== lecturerId) {
-      throw new ForbiddenException('You are not allowed to delete this course');
-    }
-
-    return this.prisma.course.delete({
-      where: { id: courseId },
-    });
   }
 
   /**
@@ -216,34 +275,64 @@ export class CoursesService {
     lecturerId: number,
     file?: Express.Multer.File,
   ) {
-    const course = await this.prisma.course.findUnique({
-      where: { id: courseId },
-    });
+    try {
+      this.logger.log(
+        `Lecturer ${lecturerId} adding module to course ${courseId}: ${dto.title}`,
+      );
 
-    if (!course) {
-      throw new NotFoundException('Course not found');
+      const course = await this.prisma.course.findUnique({
+        where: { id: courseId },
+      });
+
+      if (!course) {
+        this.logger.warn(`Course not found: ${courseId}`);
+        throw new NotFoundException('Course not found');
+      }
+
+      if (course.lecturerId !== lecturerId) {
+        this.logger.warn(
+          `Lecturer ${lecturerId} attempted to add module to course ${courseId} owned by ${course.lecturerId}`,
+        );
+        throw new ForbiddenException(
+          'You are not allowed to modify this course',
+        );
+      }
+
+      if (!file) {
+        this.logger.warn(
+          `Lecturer ${lecturerId} attempted to add module without file to course ${courseId}`,
+        );
+        throw new BadRequestException('Module file is required');
+      }
+
+      const fileUrl = `/uploads/modules/${file.filename}`;
+      const fileType = this.resolveModuleType(file.mimetype);
+
+      this.logger.debug(
+        `Module file: ${file.filename} (${file.mimetype}) - Type: ${fileType}`,
+      );
+
+      const module = await this.prisma.courseModule.create({
+        data: {
+          title: dto.title,
+          description: dto.description,
+          fileUrl,
+          fileType,
+          courseId,
+        },
+      });
+
+      this.logger.log(
+        `Module created successfully: ${module.id} in course ${courseId}`,
+      );
+      return module;
+    } catch (error) {
+      this.logger.error(
+        `Error adding module to course ${courseId} for lecturer ${lecturerId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
     }
-
-    if (course.lecturerId !== lecturerId) {
-      throw new ForbiddenException('You are not allowed to modify this course');
-    }
-
-    if (!file) {
-      throw new BadRequestException('Module file is required');
-    }
-
-    const fileUrl = `/uploads/modules/${file.filename}`;
-    const fileType = this.resolveModuleType(file.mimetype);
-
-    return this.prisma.courseModule.create({
-      data: {
-        title: dto.title,
-        description: dto.description,
-        fileUrl,
-        fileType,
-        courseId,
-      },
-    });
   }
 
   async getModules(courseId: number, user: { id: number; role: string }) {
