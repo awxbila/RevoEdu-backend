@@ -83,7 +83,7 @@ export class EnrollmentsController {
    * ===============================
    */
 
-  // 👨‍🎓 View students in a course
+  // 👨‍🎓 Get all students enrolled in a specific course
   @Get('course/:courseId')
   @Roles('LECTURER')
   getStudentsByCourse(
@@ -94,5 +94,21 @@ export class EnrollmentsController {
       Number(courseId),
       req.user.id,
     );
+  }
+
+  // 👨‍🎓 Get enrollments (generic - lists all enrollments, useful for debugging)
+  @Get()
+  @Roles('LECTURER', 'STUDENT')
+  @ApiOperation({ summary: 'Get enrollments (for debugging)' })
+  getAllEnrollments(@Request() req: any) {
+    // If student, return their own enrollments
+    // If lecturer, return empty (use GET /course/:courseId instead)
+    if (req.user.role === 'STUDENT') {
+      return this.enrollmentsService.getStudentEnrollments(req.user.id);
+    }
+    return {
+      message:
+        'Use GET /enrollments/course/:courseId to view students in your course',
+    };
   }
 }
