@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { ModuleType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { S3Service } from '../common/s3.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { CreateCourseModuleDto } from './dto/create-course-module.dto';
@@ -15,7 +16,10 @@ import { CreateCourseModuleDto } from './dto/create-course-module.dto';
 export class CoursesService {
   private readonly logger = new Logger(CoursesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly s3Service: S3Service,
+  ) {}
 
   /**
    * ===============================
@@ -201,11 +205,10 @@ export class CoursesService {
       );
 
       let imageUrl: string | null = null;
-
       if (file) {
-        // Generate URL for uploaded image
-        imageUrl = `/uploads/courses/${file.filename}`;
-        this.logger.debug(`Course image uploaded: ${file.filename}`);
+        // Upload ke S3
+        imageUrl = await this.s3Service.uploadFile(file, 'courses');
+        this.logger.debug(`Course image uploaded to S3: ${imageUrl}`);
       }
 
       const course = await this.prisma.course.create({
@@ -363,11 +366,12 @@ export class CoursesService {
         throw new BadRequestException('Module file is required');
       }
 
-      const fileUrl = `/uploads/modules/${file.filename}`;
+      // Upload file ke S3
+      const fileUrl = await this.s3Service.uploadFile(file, 'modules');
       const fileType = this.resolveModuleType(file.mimetype);
 
       this.logger.debug(
-        `Module file: ${file.filename} (${file.mimetype}) - Type: ${fileType}`,
+        `Module file uploaded to S3: ${fileUrl} (${file.mimetype}) - Type: ${fileType}`,
       );
 
       const module = await this.prisma.courseModule.create({

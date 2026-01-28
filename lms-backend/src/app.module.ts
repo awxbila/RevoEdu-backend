@@ -21,5 +21,8 @@ import { ConfigModule } from '@nestjs/config';
     AssignmentsModule,
     QuizzesModule,
   ],
+import { S3Service } from './common/s3.service';
 })
+export class AppModule {
+  providers: [AppService, S3Service],
 export class AppModule {}
