@@ -169,7 +169,43 @@ export class CoursesController {
   // ➕ Create course
   @Roles('LECTURER')
   @Post()
+  @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description:
+      'Create a new course. Lecturer ID is automatically taken from JWT token.',
+    schema: {
+      type: 'object',
+      required: ['code', 'title', 'description'],
+      properties: {
+        code: {
+          type: 'string',
+          example: 'CS101',
+          description: 'Course code (required)',
+        },
+        title: {
+          type: 'string',
+          example: 'Introduction to Computer Science',
+          description: 'Course title (required)',
+        },
+        description: {
+          type: 'string',
+          example: 'Basic concepts of computer science',
+          description: 'Course description (required)',
+        },
+        brief: {
+          type: 'string',
+          example: 'CS basics',
+          description: 'Brief summary (optional)',
+        },
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Course image (optional)',
+        },
+      },
+    },
+  })
   @UseInterceptors(FileInterceptor('image', multerConfig))
   async create(
     @Body() dto: CreateCourseDto,
