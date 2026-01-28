@@ -7,6 +7,8 @@ import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
 import { ConfigModule } from '@nestjs/config';
+import { S3Service } from './common/s3.service';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -21,8 +23,6 @@ import { ConfigModule } from '@nestjs/config';
     AssignmentsModule,
     QuizzesModule,
   ],
-import { S3Service } from './common/s3.service';
-})
-export class AppModule {
   providers: [AppService, S3Service],
+})
 export class AppModule {}
