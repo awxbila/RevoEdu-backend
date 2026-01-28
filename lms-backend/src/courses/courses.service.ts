@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { ModuleType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { S3Service } from '../common/s3.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { CreateCourseModuleDto } from './dto/create-course-module.dto';
@@ -18,7 +17,7 @@ export class CoursesService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly s3Service: S3Service,
+    // tanpa S3Service
   ) {}
 
   /**
@@ -206,9 +205,9 @@ export class CoursesService {
 
       let imageUrl: string | null = null;
       if (file) {
-        // Upload ke S3
-        imageUrl = await this.s3Service.uploadFile(file, 'courses');
-        this.logger.debug(`Course image uploaded to S3: ${imageUrl}`);
+        // Simpan file lokal atau logic lama di sini
+        // Contoh: imageUrl = `/uploads/courses/${file.filename}`;
+        imageUrl = `/uploads/courses/${file.filename}`;
       }
 
       const course = await this.prisma.course.create({
@@ -366,13 +365,9 @@ export class CoursesService {
         throw new BadRequestException('Module file is required');
       }
 
-      // Upload file ke S3
-      const fileUrl = await this.s3Service.uploadFile(file, 'modules');
+      // Simpan file lokal atau logic lama di sini
+      const fileUrl = `/uploads/modules/${file.filename}`;
       const fileType = this.resolveModuleType(file.mimetype);
-
-      this.logger.debug(
-        `Module file uploaded to S3: ${fileUrl} (${file.mimetype}) - Type: ${fileType}`,
-      );
 
       const module = await this.prisma.courseModule.create({
         data: {
